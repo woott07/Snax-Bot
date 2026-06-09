@@ -28,10 +28,23 @@ const client = new Client({
 client.commands = new Collection();
 
 // Initialize the Player and load extraction methods
-const player = new Player(client);
-player.extractors.loadMulti(DefaultExtractors).then(() => {
-    logger.success('Extractors loaded successfully!');
-}).catch(e => logger.error(`Extractors failed: ${e}`));
+const player = new Player(client, {
+    ytdlOptions: {
+        quality: 'highestaudio',
+        highWaterMark: 1 << 25
+    }
+});
+
+async function loadExtractors() {
+    try {
+        // Load the default extractors which automatically use play-dl and youtube-ext fallbacks
+        await player.extractors.loadMulti(DefaultExtractors);
+        logger.success('Extractors loaded successfully!');
+    } catch (e) {
+        logger.error(`Extractors failed: ${e}`);
+    }
+}
+loadExtractors();
 
 // Load Handlers
 commandHandler(client);

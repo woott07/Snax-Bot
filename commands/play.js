@@ -1,3 +1,4 @@
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { checkVoice } = require('../utils/voiceCheck');
 
 module.exports = {
@@ -12,12 +13,12 @@ module.exports = {
         const query = args.join(' ');
         if (!query) return message.reply("❌ Please provide a song name or YouTube link!");
 
-        await message.reply(`🔍 Searching for **${query}**....`);
+        const loadingMsg = await message.reply(`🔍 Searching...`);
 
         try {
             const { track } = await player.play(voiceChannel, query, {
                 nodeOptions: {
-                    metadata: { channel: message.channel, controllerMsg: null },
+                    metadata: { channel: message.channel, controllerMsg: null, guild: message.guild },
                     selfDeaf: config.selfDeaf !== undefined ? config.selfDeaf : true,
                     volume: config.defaultVolume !== undefined ? config.defaultVolume : 80,
                     leaveOnEmpty: config.leaveOnEmpty !== undefined ? config.leaveOnEmpty : true,
@@ -26,10 +27,71 @@ module.exports = {
                     skipOnNoStream: true,
                 }
             });
-            message.channel.send(`✅ Added **${track.title}** to the queue!`);
+            
+            const queue = player.nodes.get(message.guild.id);
+            
+            // Stop previous collector if exists so only one active "Add" embed exists
+            if (queue.metadata.lastAddCollector) {
+                queue.metadata.lastAddCollector.stop('new_song');
+            }
+
+            const embed = new EmbedBuilder()
+                .setColor(config.embed?.color || '#2b2d31')
+                .setAuthor({ name: 'Added to Queue', iconURL: message.author.displayAvatarURL() })
+                .setDescription(`**[${track.title}](${track.url})**`)
+                .setThumbnail(track.thumbnail);
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('add_remove').setLabel('🗑️ Remove').setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('add_top').setLabel('🔼 Push to Top').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('add_keep').setLabel('✅ Keep').setStyle(ButtonStyle.Secondary)
+            );
+
+            const addedMsg = await loadingMsg.edit({ content: '', embeds: [embed], components: [row] });
+
+            const collector = addedMsg.createMessageComponentCollector({ time: 120000 });
+            queue.metadata.lastAddCollector = collector;
+
+            collector.on('collect', async (i) => {
+                // Ensure only the requester can use these buttons
+                if (i.user.id !== message.author.id) {
+                    return i.reply({ content: 'Only the requester can use these buttons.', flags: 64 });
+                }
+
+                if (i.customId === 'add_remove') {
+                    queue.removeTrack(track);
+                    embed.setAuthor({ name: 'Removed from Queue', iconURL: message.author.displayAvatarURL() });
+                    await i.update({ embeds: [embed], components: [] });
+                    collector.stop('user_action');
+                } else if (i.customId === 'add_top') {
+                    // Find the track in the queue array
+                    const trackIdx = queue.tracks.toArray().findIndex(t => t.id === track.id);
+                    if (trackIdx !== -1) {
+                        const removedTrack = queue.node.remove(trackIdx);
+                        if (removedTrack) {
+                            queue.node.insert(removedTrack, 0); // Insert at the front (play next)
+                        }
+                    }
+                    embed.setAuthor({ name: 'Pushed to Top', iconURL: message.author.displayAvatarURL() });
+                    await i.update({ embeds: [embed], components: [] });
+                    collector.stop('user_action');
+                } else if (i.customId === 'add_keep') {
+                    embed.setAuthor({ name: 'Kept in Queue', iconURL: message.author.displayAvatarURL() });
+                    await i.update({ embeds: [embed], components: [] });
+                    collector.stop('user_action');
+                }
+            });
+
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time' || reason === 'new_song') {
+                    // Remove buttons but keep embed
+                    addedMsg.edit({ components: [] }).catch(() => {});
+                }
+            });
+
         } catch (e) {
             console.error(e);
-            message.channel.send(`❌ Error: ${e.message}`);
+            loadingMsg.edit(`❌ Error: ${e.message}`).catch(() => {});
         }
     }
 };

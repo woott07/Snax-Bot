@@ -2,14 +2,22 @@
 
 Welcome to **Snax**! A highly modular, dynamic, and powerful Discord music bot. Built using `discord.js` and `discord-player`, this bot is designed to be fully customizable, easy to maintain, and extremely user-friendly.
 
+> ⚠️ **Note**: Still under work, feel free to use it!
+
+---
+
+## 🔗 Invite Snax to Your Server!
+[Click here to invite the bot!](https://discord.com/oauth2/authorize?client_id=1479181184696193154&permissions=8&integration_type=0&scope=bot)
+
 ---
 
 ## ✨ Features
 
 - **Modular Architecture**: Everything is separated into neat little folders. Commands, events, and player logic are all dynamically loaded. No more massive, confusing `index.js` files!
-- **Interactive Controller**: Snax doesn't just play music; it spawns a beautiful, interactive embed with buttons (Play, Pause, Skip, Stop) so users can control the queue without typing a single command.
-- **Robust Audio Extractors**: Using the latest `@discord-player/extractor`, it grabs high-quality audio efficiently.
-- **Queue Management**: Built-in commands to shuffle, clear, loop, and view the current queue.
+- **Ultra-Clean Interactive Embeds**: When you play a song, Snax sends a clean UI with the song's thumbnail and **Interactive Buttons** (`Remove`, `Push to Top`, `Keep`). These buttons auto-dismiss when a new song is added to keep your chat clean.
+- **Robust Audio Extractors**: Using the latest extraction bridges (`play-dl`, `youtube-ext`) with `highestaudio` quality enforced, ensuring crystal-clear, glitch-free audio playback.
+- **Private Automated Logging**: Automatically creates a secure `snax-log` channel in your server where only Admins and the bot can read/write logs.
+- **Queue Management**: Built-in commands to `$play`, `$skip`, `$volume`, `$remove` (by name), `$queue`, and much more!
 
 ---
 
@@ -20,33 +28,33 @@ Here's a quick look at how the bot is organized:
 ```text
 Snax/
 ├── config/           # Configuration files (config.json) and env wrappers
-├── commands/         # All text commands ($play, $skip, $volume, etc.)
+├── commands/         # All text commands ($play, $skip, $remove, etc.)
 ├── events/           # Standard Discord client events (ready, messageCreate)
 ├── playerEvents/     # Audio player events (playerStart, emptyQueue)
 ├── embeds/           # UI elements and Embed builders
 ├── handlers/         # Dynamic loaders that bootstrap commands and events
 ├── services/         # Core business logic and audio abstractions
-├── utils/            # Helper scripts (like voiceCheck and the custom logger)
-├── data/             # Local storage for settings and playlists
+├── utils/            # Helper scripts (like voiceCheck and serverLogger)
+├── install.bat       # 1-Click safe installer for Windows
 └── index.js          # The incredibly lightweight entry point!
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Safe Installation)
+
+Safety is our 1st priority! The installation process restricts everything to this specific folder. It **will not** install anything globally or mess with your device's core files.
 
 ### 1. Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed (v16.9.0 or higher is recommended for discord.js v14).
+Make sure you have [Node.js](https://nodejs.org/) installed on your computer.
 
-### 2. Installation
-Clone or download this repository to your local machine, then install the required dependencies:
-
-```bash
-npm install
-```
+### 2. Quick Setup (Recommended)
+If you pulled this code from Git or downloaded it:
+- Simply double-click the `install.bat` file.
+- It will safely download all the required packages directly into the `Snax` folder.
 
 ### 3. Environment Variables
-Create a `.env` file in the root directory and add your bot's secret credentials. It should look like this:
+Create a `.env` file in the root directory and add your bot's secret credentials:
 
 ```env
 Bot_Token=YOUR_DISCORD_BOT_TOKEN_HERE
@@ -54,26 +62,15 @@ Bot_Token=YOUR_DISCORD_BOT_TOKEN_HERE
 *(Make sure you never share your token publicly!)*
 
 ### 4. Configuration
-You can tweak the bot's behavior in `config/config.json`. Here you can change the default prefix, embed colors, volume, and permissions!
-
-```json
-{
-    "prefix": "$",
-    "defaultVolume": 100,
-    "embed": {
-        "color": "#2b2d31",
-        "showThumbnail": true
-    }
-}
-```
+You can tweak the bot's behavior in `config/config.json`. Change the default prefix, embed colors, default volume, etc.
 
 ### 5. Run the Bot
-Once everything is set up, fire up the bot using:
+Once setup is complete, you can start the bot using your terminal:
 
 ```bash
 node index.js
 ```
-You should see a series of success messages in your terminal indicating that commands and events have loaded, followed by `🤖 Success! Logged in as YourBotName`.
+You should see a series of success messages in your terminal indicating that the extractors and commands have loaded, followed by `🤖 Success! Logged in as YourBotName`.
 
 ---
 
@@ -81,17 +78,6 @@ You should see a series of success messages in your terminal indicating that com
 
 Want to add a new feature? It's incredibly easy! 
 Just create a new file in the `commands/` folder. Snax will automatically detect it and load it the next time it starts.
-
-Example `commands/ping.js`:
-```javascript
-module.exports = {
-    name: 'ping',
-    description: 'Replies with Pong!',
-    execute: async (message, args, client, player, config) => {
-        message.reply('🏓 Pong!');
-    }
-};
-```
 
 ---
 
