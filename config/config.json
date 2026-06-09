@@ -1,0 +1,20 @@
+{
+    "prefix": "$",
+    "defaultVolume": 100,
+    "leaveOnEmpty": true,
+    "leaveOnEmptyCooldown": 30000,
+    "leaveOnEnd": false,
+    "autoJoin": false,
+    "selfDeaf": true,
+    "embed": {
+        "color": "#2b2d31",
+        "showThumbnail": true,
+        "showRequester": true
+    },
+    "maxQueueDisplay": 10,
+    "permissions": {
+        "sameVoiceRequired": true,
+        "djRole": "",
+        "adminBypass": true
+    }
+}
