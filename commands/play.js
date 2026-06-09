@@ -15,6 +15,10 @@ module.exports = {
 
         const loadingMsg = await message.reply(`🔍 Searching...`);
 
+        // Check for existing collector BEFORE playing, in case metadata gets overwritten
+        const existingQueue = player.nodes.get(message.guild.id);
+        const oldCollector = existingQueue?.metadata?.lastAddCollector;
+
         try {
             const { track } = await player.play(voiceChannel, query, {
                 nodeOptions: {
@@ -31,8 +35,8 @@ module.exports = {
             const queue = player.nodes.get(message.guild.id);
             
             // Stop previous collector if exists so only one active "Add" embed exists
-            if (queue.metadata.lastAddCollector) {
-                queue.metadata.lastAddCollector.stop('new_song');
+            if (oldCollector) {
+                oldCollector.stop('new_song');
             }
 
             const embed = new EmbedBuilder()

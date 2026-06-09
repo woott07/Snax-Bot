@@ -17,7 +17,7 @@ Welcome to **Snax**! A highly modular, dynamic, and powerful Discord music bot. 
 - **Ultra-Clean Interactive Embeds**: When you play a song, Snax sends a clean UI with the song's thumbnail and **Interactive Buttons** (`Remove`, `Push to Top`, `Keep`). These buttons auto-dismiss when a new song is added to keep your chat clean.
 - **Robust Audio Extractors**: Using the latest extraction bridges (`play-dl`, `youtube-ext`) with `highestaudio` quality enforced, ensuring crystal-clear, glitch-free audio playback.
 - **Private Automated Logging**: Automatically creates a secure `snax-log` channel in your server where only Admins and the bot can read/write logs.
-- **Queue Management**: Built-in commands to `$play`, `$skip`, `$volume`, `$remove` (by name), `$queue`, and much more!
+- **Queue Management**: Built-in commands to `play`, `skip`, `volume`, `remove` (by name), `queue`, and much more! (Prefix is fully customizable in config.json, defaults to `$`)
 
 ---
 
@@ -28,7 +28,7 @@ Here's a quick look at how the bot is organized:
 ```text
 Snax/
 ├── config/           # Configuration files (config.json) and env wrappers
-├── commands/         # All text commands ($play, $skip, $remove, etc.)
+├── commands/         # All text commands (play, skip, remove, etc.)
 ├── events/           # Standard Discord client events (ready, messageCreate)
 ├── playerEvents/     # Audio player events (playerStart, emptyQueue)
 ├── embeds/           # UI elements and Embed builders
@@ -49,13 +49,13 @@ Safety is our 1st priority! The installation process restricts everything to thi
 Make sure you have [Node.js](https://nodejs.org/) installed on your computer.
 
 ### 2. Quick Setup (Recommended)
-If you pulled this code from Git or downloaded it:
+If you pulled this code from Git or downloaded it, setup is 100% automated:
 - Simply double-click the `install.bat` file.
-- It will safely download all the required packages directly into the `Snax` folder.
+- It will safely download all required packages into this folder ONLY.
+- It will **automatically create** your `.env` and `.gitignore` files.
 
-### 3. Environment Variables
-Create a `.env` file in the root directory and add your bot's secret credentials:
-
+### 3. Add Your Token
+Since `install.bat` created the `.env` file for you, just open it in any text editor and paste your bot token:
 ```env
 Bot_Token=YOUR_DISCORD_BOT_TOKEN_HERE
 ```

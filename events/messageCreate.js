@@ -3,7 +3,7 @@ const { Events } = require('discord.js');
 module.exports = {
     name: Events.MessageCreate,
     async execute(message, client, player, config) {
-        if (message.author.bot) return;
+        if (message.author.bot || !message.guild) return;
 
         const prefix = config.prefix || '$';
         const mentionPrefix = new RegExp(`^<@!?${client.user.id}>\\s*`);
