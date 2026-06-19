@@ -1,5 +1,5 @@
-const { checkVoice } = require('../utils/voiceCheck');
-const { createQueueEmbed, createActionRow } = require('../embeds/playerEmbed');
+const { checkVoice } = require('../../utils/voiceCheck');
+const { createQueueEmbed, createActionRow } = require('../embeds');
 
 module.exports = {
     name: 'queue',

@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { checkVoice } = require('../utils/voiceCheck');
+const { checkVoice } = require('../../utils/voiceCheck');
 
 module.exports = {
     name: 'play',

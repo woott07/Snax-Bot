@@ -20,17 +20,4 @@ module.exports = (client, player) => {
         clientEventsCount++;
     }
     logger.success(`Registered ${clientEventsCount} client events successfully!`);
-
-    // 2. Player Events
-    const playerEventsPath = path.join(__dirname, '../playerEvents');
-    const playerEventFiles = fs.readdirSync(playerEventsPath).filter(file => file.endsWith('.js'));
-    let playerEventsCount = 0;
-
-    for (const file of playerEventFiles) {
-        const filePath = path.join(playerEventsPath, file);
-        const event = require(filePath);
-        player.events.on(event.name, (...args) => event.execute(...args, client, player, config));
-        playerEventsCount++;
-    }
-    logger.success(`Registered ${playerEventsCount} player events successfully!`);
 };

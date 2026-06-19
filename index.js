@@ -1,6 +1,4 @@
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { Player } = require('discord-player');
-const { DefaultExtractors } = require('@discord-player/extractor');
 const config = require('./config/config');
 const logger = require('./utils/logger');
 const commandHandler = require('./handlers/commandHandler');
@@ -27,24 +25,8 @@ const client = new Client({
 // Create command Map to hold all text commands
 client.commands = new Collection();
 
-// Initialize the Player and load extraction methods
-const player = new Player(client, {
-    ytdlOptions: {
-        quality: 'highestaudio',
-        highWaterMark: 1 << 25
-    }
-});
-
-async function loadExtractors() {
-    try {
-        // Load the default extractors which automatically use play-dl and youtube-ext fallbacks
-        await player.extractors.loadMulti(DefaultExtractors);
-        logger.success('Extractors loaded successfully!');
-    } catch (e) {
-        logger.error(`Extractors failed: ${e}`);
-    }
-}
-loadExtractors();
+// Load Isolated Music System (returns the player instance)
+const player = require('./music/player')(client);
 
 // Load Handlers
 commandHandler(client);

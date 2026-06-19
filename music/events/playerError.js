@@ -1,5 +1,5 @@
 const { QueueRepeatMode } = require('discord-player');
-const { sendGuildLog } = require('../utils/serverLogger');
+const { sendGuildLog } = require('../../utils/serverLogger');
 
 module.exports = {
     name: 'playerError',

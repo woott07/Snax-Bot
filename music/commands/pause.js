@@ -1,4 +1,4 @@
-const { checkVoice } = require('../utils/voiceCheck');
+const { checkVoice } = require('../../utils/voiceCheck');
 
 module.exports = {
     name: 'pause',

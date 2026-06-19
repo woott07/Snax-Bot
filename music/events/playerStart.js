@@ -1,5 +1,5 @@
-const { createQueueEmbed, createActionRow } = require('../embeds/playerEmbed');
-const { sendGuildLog } = require('../utils/serverLogger');
+const { createQueueEmbed, createActionRow } = require('../embeds');
+const { sendGuildLog } = require('../../utils/serverLogger');
 
 module.exports = {
     name: 'playerStart',

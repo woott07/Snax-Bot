@@ -1,8 +1,9 @@
-const { checkVoice } = require('../utils/voiceCheck');
+const { checkVoice } = require('../../utils/voiceCheck');
 
 module.exports = {
-    name: 'resume',
-    description: 'Resumes paused music playback',
+    name: 'skip',
+    aliases: ['next', 's'],
+    description: 'Skips the current song',
     async execute(message, args, client, player, config) {
         const queue = player.nodes.get(message.guild.id);
         if (!queue || !queue.isPlaying()) return message.reply('❌ No song is playing!');
@@ -10,7 +11,7 @@ module.exports = {
         const check = checkVoice(message, config);
         if (!check.valid) return message.reply(check.message);
 
-        queue.node.resume();
-        return message.reply('▶️ Resumed the playback.');
+        queue.node.skip();
+        return message.reply('⏭️ Skipped to the next song.');
     }
 };
