@@ -6,6 +6,7 @@ module.exports = {
     async execute(guild, client, player, config) {
         // Initialize the log channel when the bot joins a new server
         await getOrCreateLogChannel(guild);
-        await sendGuildLog(guild, `👋 Hello! Thanks for adding **${client.user.username}** to your server. I've created this private channel to log important bot activities and errors.`);
+        await sendGuildLog(guild, `👋 Hello! Thanks for adding **${client.user.username}** to your server. I've created this private channel to log important bot activities and errors.My prefix is $
+            for more type $help`);
     }
 };

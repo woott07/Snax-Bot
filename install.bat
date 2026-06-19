@@ -10,7 +10,7 @@ if not exist .env (
 )
 
 if not exist .gitignore (
-    echo node_modules/ > .gitignore
+    echo node_modules/ > .gitignore 
     echo .env >> .gitignore
     echo [INFO] Created .gitignore file.
 )

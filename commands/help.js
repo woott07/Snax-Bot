@@ -159,6 +159,10 @@ module.exports = {
 \`${prefix}SupBypass @role/@user\` - Grant SupBypass (Total Spam Immunity)
 \`${prefix}remSupBypass @role/@user\` - Revoke SupBypass
 
+**Announcements**
+\`${prefix}announce\` - Post a styled announcement to a selected channel
+\`${prefix}announceOwn <message>\` - Global announcement to all servers (Bot Owner Only)
+
 **Utility**
 \`${prefix}setprefix <prefix>\` - Change the bot's prefix for this server
 \`${prefix}remprefix\` - Remove custom prefix and reset to default
