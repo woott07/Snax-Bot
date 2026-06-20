@@ -32,3 +32,7 @@ index3.js
 
 # Data (Ignore dynamic database/settings files so they don't get overwritten on pull)
 data/
+
+# Troubleshooting & Test Scripts
+test-*.js
+full_documentation.txt

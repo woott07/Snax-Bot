@@ -1,5 +1,5 @@
 const { Player } = require('discord-player');
-const { DefaultExtractors } = require('@discord-player/extractor');
+const YTDLPExtractor = require('./extractors/YTDLPExtractor');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/logger');
@@ -17,8 +17,19 @@ module.exports = (client) => {
     // Load Extractors
     async function loadExtractors() {
         try {
+            // ── 1. Register Custom YTDLP Extractor ───────────
+            // This extractor uses yt-dlp to bypass broken cipher decryption in javascript libraries.
+            await player.extractors.register(YTDLPExtractor);
+
+            // ── 2. Load default extractors EXCEPT the built-in YouTubeExtractor ──
+            // Load remaining default extractors (SoundCloud, Spotify metadata,
+            // Vimeo, AppleMusic, Attachment, Reverbnation).
+            // Note: DefaultExtractors in v7 does NOT include YouTubeExtractor,
+            // so no conflict with our YoutubeiExtractor.
+            const { DefaultExtractors } = require('@discord-player/extractor');
             await player.extractors.loadMulti(DefaultExtractors);
-            logger.success('Music Extractors loaded successfully!');
+
+            logger.success('Music extractors loaded (YTDLPExtractor + default extractors)');
         } catch (e) {
             logger.error(`Music Extractors failed: ${e}`);
         }
