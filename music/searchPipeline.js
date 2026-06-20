@@ -17,6 +17,7 @@ const logger = require('../utils/logger');
 const URL_REGEX = /^https?:\/\//i;
 const YOUTUBE_URL_REGEX = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be|music\.youtube\.com)\//i;
 const PLAYLIST_REGEX = /[?&]list=/i;
+const SHORTS_REGEX = /youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/i;
 
 /**
  * Determine if a query is a URL (direct link).
@@ -38,6 +39,14 @@ function isPlaylist(query) {
  */
 function cleanYouTubeUrl(url) {
     try {
+        // ── Convert YouTube Shorts URLs to regular watch URLs ──
+        const shortsMatch = url.match(SHORTS_REGEX);
+        if (shortsMatch) {
+            const videoId = shortsMatch[1].split('?')[0]; // strip any query params
+            logger.info(`[SearchPipeline] Shorts URL detected, converting to watch URL: ${videoId}`);
+            return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+
         const parsed = new URL(url);
         const videoId = parsed.searchParams.get('v');
         if (videoId && (parsed.hostname.includes('youtube.com') || parsed.hostname.includes('youtu.be'))) {
@@ -62,6 +71,19 @@ function cleanYouTubeUrl(url) {
  * @param {string} query
  * @returns {Promise<{ url: string, title: string, id: string, apiResponse: any }>}
  */
+/**
+ * Parse an ISO 8601 duration string (e.g. "PT1M30S") to total seconds.
+ */
+function parseDurationToSeconds(iso) {
+    if (!iso) return 0;
+    const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 0;
+    const h = parseInt(match[1] || 0);
+    const m = parseInt(match[2] || 0);
+    const s = parseInt(match[3] || 0);
+    return h * 3600 + m * 60 + s;
+}
+
 async function searchWithYouTubeAPI(query) {
     const apiKey = process.env.YOUTUBE_API_KEY;
     
@@ -69,7 +91,8 @@ async function searchWithYouTubeAPI(query) {
         throw new Error('YOUTUBE_API_KEY is missing from .env file.');
     }
 
-    const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${apiKey}`;
+    // Fetch up to 10 candidates so we can filter out Shorts
+    const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}`;
 
     logger.info(`[YouTube API] Fetching search results for: "${query}"`);
     
@@ -87,24 +110,54 @@ async function searchWithYouTubeAPI(query) {
         throw new Error(`YouTube API returned status ${response.status}: ${data.error?.message || 'Unknown error'}`);
     }
 
-    if (data.items && data.items.length > 0) {
-        const video = data.items[0];
+    if (!data.items || data.items.length === 0) return null;
+
+    // ── Fetch durations for all candidates in one batch request ──
+    const videoIds = data.items.map(v => v.id.videoId).join(',');
+    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds}&key=${apiKey}`;
+    const detailsResponse = await fetch(detailsUrl);
+    const detailsData = await detailsResponse.json();
+
+    // Build a map of videoId -> durationSeconds
+    const durationMap = {};
+    if (detailsData.items) {
+        for (const item of detailsData.items) {
+            durationMap[item.id] = parseDurationToSeconds(item.contentDetails?.duration);
+        }
+    }
+
+    // ── Pick the first result that is NOT a Short (duration > 60s) ──
+    for (const video of data.items) {
         const videoId = video.id.videoId;
+        const durationSec = durationMap[videoId] ?? 0;
+
+        if (durationSec > 0 && durationSec <= 60) {
+            logger.info(`[YouTube API] Skipping Short: "${video.snippet.title}" (${durationSec}s)`);
+            continue;
+        }
+
         const title = video.snippet.title;
         const url = `https://www.youtube.com/watch?v=${videoId}`;
+        logger.info(`[YouTube API] Found video: "${title}" (${url}) [${durationSec}s]`);
 
-        logger.info(`[YouTube API] Found video: "${title}" (${url})`);
-        
         return {
             url,
             title,
             id: videoId,
-            apiResponse: data // Passed back for debug logging in the command
+            apiResponse: data
         };
     }
 
-    // No results found
-    return null;
+    // All results were Shorts — fall back to the very first result with a warning
+    const fallback = data.items[0];
+    const fallbackId = fallback.id.videoId;
+    logger.warn(`[YouTube API] All results appear to be Shorts for "${query}". Using first result as fallback.`);
+    return {
+        url: `https://www.youtube.com/watch?v=${fallbackId}`,
+        title: fallback.snippet.title,
+        id: fallbackId,
+        apiResponse: data
+    };
 }
 
 /**
