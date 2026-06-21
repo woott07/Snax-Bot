@@ -79,7 +79,8 @@ module.exports = {
 \`${prefix}skip\` / \`${prefix}prev\` - Skip to next/previous song
 \`${prefix}remove <name>\` - Remove a specific song
 \`${prefix}clear\` / \`${prefix}shuffle\` - Manage the upcoming queue
-\`${prefix}loop\` - Cycle loop mode (Track / Queue / Off)
+\`${prefix}loop <number/name>\` - Loop current song or a specific song
+\`${prefix}loopQ\` - Toggle loop for the entire queue
 \`${prefix}autoplay\` - Toggle Autoplay mode
 \`${prefix}stop\` - Stop playback and clear everything
 \`${prefix}join\` / \`${prefix}leave\` - Join or leave voice channel

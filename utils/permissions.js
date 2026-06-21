@@ -23,7 +23,7 @@ const COMMAND_GROUPS = {
     'Default': [
         'play', 'skip', 'queue', 'ping', 'help', 'hello', 'nowplaying', 
         'volume', 'pause', 'resume', 'prev', 'remove', 'clear', 
-        'shuffle', 'loop', 'autoplay', 'stop', 'join', 'leave'
+        'shuffle', 'loop', 'loopQ', 'autoplay', 'stop', 'join', 'leave'
     ]
 };
 
