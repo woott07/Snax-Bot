@@ -1,38 +1,39 @@
 module.exports = {
     name: 'remove',
-    description: 'Remove a specific song from the queue by name',
+    description: 'Remove a song from the queue by number or name',
     async execute(message, args, client, player, config) {
-        const queue = player.nodes.get(message.guild.id);
-        
-        if (!queue || !queue.isPlaying()) {
+        const kPlayer = player.players.get(message.guild.id);
+        if (!kPlayer || !kPlayer.playing) {
             return message.reply('❌ No music is currently playing.');
         }
 
-        const query = args.join(' ').toLowerCase();
-        if (!query) {
-            return message.reply('❌ Please provide the name of the song you want to remove.');
+        const input = args.join(' ').trim();
+        if (!input) {
+            return message.reply('❌ Please provide a song number or name.\nExample: `$remove 2` or `$remove song name`');
         }
 
-        // Get the current queue array
-        const tracks = queue.tracks.toArray();
-
+        const tracks = Array.from(kPlayer.queue);
         if (tracks.length === 0) {
-            return message.reply('❌ The queue is empty.');
+            return message.reply('❌ The queue is empty. Nothing to remove.');
         }
 
-        // Search for a track that matches the query
-        const trackIndex = tracks.findIndex(t => t.title.toLowerCase().includes(query));
+        let trackIndex = -1;
+        const num = parseInt(input, 10);
 
-        if (trackIndex === -1) {
-            return message.reply(`❌ Could not find a song matching **"${query}"** in the queue.`);
+        if (!isNaN(num)) {
+            trackIndex = num - 1;
+            if (trackIndex < 0 || trackIndex >= tracks.length) {
+                return message.reply(`❌ Invalid number. Queue has **${tracks.length}** song(s). Use \`$queue\` to see the list.`);
+            }
+        } else {
+            trackIndex = tracks.findIndex(t => t.title.toLowerCase().includes(input.toLowerCase()));
+            if (trackIndex === -1) {
+                return message.reply(`❌ No song matching **"${input}"** found. Use \`$queue\` to see the numbered list.`);
+            }
         }
 
-        // We found a match! Get the track
         const trackToRemove = tracks[trackIndex];
-
-        // Remove it using its queue index
-        queue.node.remove(trackIndex);
-
-        message.reply(`🗑️ Removed **${trackToRemove.title}**`);
+        kPlayer.queue.remove(trackIndex);
+        return message.reply(`🗑️ Removed **#${trackIndex + 1} — ${trackToRemove.title}** from the queue.`);
     }
 };

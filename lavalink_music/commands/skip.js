@@ -5,13 +5,13 @@ module.exports = {
     aliases: ['next', 's'],
     description: 'Skips the current song',
     async execute(message, args, client, player, config) {
-        const queue = player.nodes.get(message.guild.id);
-        if (!queue || !queue.isPlaying()) return message.reply('❌ No song is playing!');
+        const kPlayer = player.players.get(message.guild.id);
+        if (!kPlayer || !kPlayer.playing) return message.reply('❌ Nothing is playing right now.');
 
         const check = checkVoice(message, config);
         if (!check.valid) return message.reply(check.message);
 
-        queue.node.skip();
-        return message.reply('⏭️ Skipped to the next song.');
+        await kPlayer.skip();
+        return message.reply('⏭️ Skipped.');
     }
 };

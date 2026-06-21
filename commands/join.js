@@ -10,16 +10,16 @@ module.exports = {
 
         const voiceChannel = check.channel;
         try {
-            const queue = player.nodes.create(message.guild, {
-                metadata: { channel: message.channel, controllerMsg: null },
-                selfDeaf: config.selfDeaf !== undefined ? config.selfDeaf : true,
-                volume: config.defaultVolume !== undefined ? config.defaultVolume : 80,
-                leaveOnEmpty: config.leaveOnEmpty !== undefined ? config.leaveOnEmpty : true,
-                leaveOnEmptyCooldown: config.leaveOnEmptyCooldown !== undefined ? config.leaveOnEmptyCooldown : 30000,
-                leaveOnEnd: config.leaveOnEnd !== undefined ? config.leaveOnEnd : false,
-                skipOnNoStream: true
-            });
-            if (!queue.connection) await queue.connect(voiceChannel);
+            let kPlayer = player.players.get(message.guild.id);
+            if (!kPlayer) {
+                kPlayer = await player.createPlayer({
+                    guildId: message.guild.id,
+                    textId: message.channel.id,
+                    voiceId: voiceChannel.id,
+                    deaf: config.selfDeaf !== undefined ? config.selfDeaf : true
+                });
+            }
+            kPlayer.data.set('channelId', message.channel.id);
             return message.reply(`🔊 Joined **${voiceChannel.name}**!`);
         } catch (e) {
             console.error(e);

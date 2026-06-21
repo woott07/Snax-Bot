@@ -25,8 +25,8 @@ const client = new Client({
 // Create command Map to hold all text commands
 client.commands = new Collection();
 
-// Load Isolated Music System (returns the player instance)
-const player = require('./music/player')(client);
+// Load Lavalink Music System
+const player = require('./lavalink_music/player')(client);
 
 // Load Handlers
 commandHandler(client);

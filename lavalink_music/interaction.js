@@ -1,32 +1,23 @@
 const { createQueueEmbed, createActionRow } = require('./embeds');
 
 module.exports = async (interaction, client, player, config) => {
-    const queue = player.nodes.get(interaction.guildId);
-    if (!queue) {
+    const kPlayer = player.players.get(interaction.guildId);
+    if (!kPlayer) {
         try {
-            return await interaction.reply({ content: '❌ This control panel is expired or inactive.', flags: 64 });
+            return await interaction.reply({ content: '❌ The player is no longer active.', flags: 64 });
         } catch { return; }
     }
 
     try {
         switch (interaction.customId) {
             case 'music_back':
-                if (queue.history.isEmpty()) {
-                    await interaction.reply({ content: '⏮️ No track history exists!', flags: 64 });
-                } else {
-                    await interaction.deferUpdate();
-                    await queue.history.previous();
-                }
+                await interaction.reply({ content: '⏮️ Track history isn\'t available.', flags: 64 });
                 break;
 
             case 'music_pause': {
                 const isCurrentlyExpanded = interaction.message.components[0]?.components[4]?.customId === 'music_collapse';
-                if (queue.node.isPaused()) {
-                    queue.node.resume();
-                } else {
-                    queue.node.pause();
-                }
-                const embed = createQueueEmbed(queue, config, isCurrentlyExpanded);
+                await kPlayer.pause(!kPlayer.paused);
+                const embed = createQueueEmbed(kPlayer, config, isCurrentlyExpanded);
                 if (embed) {
                     await interaction.update({
                         embeds: [embed],
@@ -40,16 +31,16 @@ module.exports = async (interaction, client, player, config) => {
 
             case 'music_skip':
                 await interaction.deferUpdate();
-                queue.node.skip();
+                await kPlayer.skip();
                 break;
 
             case 'music_stop':
-                queue.delete();
-                await interaction.update({ content: '🛑 Playback terminated. Controller closed.', embeds: [], components: [] });
+                kPlayer.destroy();
+                await interaction.update({ content: '⏹️ Stopped.', embeds: [], components: [] });
                 break;
 
             case 'music_expand': {
-                const embedExp = createQueueEmbed(queue, config, true);
+                const embedExp = createQueueEmbed(kPlayer, config, true);
                 if (embedExp) {
                     await interaction.update({
                         embeds: [embedExp],
@@ -62,7 +53,7 @@ module.exports = async (interaction, client, player, config) => {
             }
 
             case 'music_collapse': {
-                const embedCol = createQueueEmbed(queue, config, false);
+                const embedCol = createQueueEmbed(kPlayer, config, false);
                 if (embedCol) {
                     await interaction.update({
                         embeds: [embedCol],
@@ -75,6 +66,6 @@ module.exports = async (interaction, client, player, config) => {
             }
         }
     } catch (err) {
-        console.error('Button interaction error (ignored):', err.message);
+        console.error('[Button Error]:', err.message);
     }
 };
