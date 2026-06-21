@@ -7,7 +7,7 @@ Welcome to **Snax**! A highly modular, dynamic, and powerful Discord music bot. 
 ---
 
 ## 🔗 Invite Snax to Your Server!
-[Click here to invite the bot!](https://discord.com/oauth2/authorize?client_id=1479181184696193154&permissions=8&integration_type=0&scope=bot)
+[Click here to invite the bot!](https://discord.com/oauth2/authorize?client_id=1479181184696193154&permissions=8&integration_type=0&scope=bot+applications.commands)
 
 ---
 
