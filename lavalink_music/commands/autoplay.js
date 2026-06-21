@@ -14,9 +14,9 @@ module.exports = {
         kPlayer.data.set('autoplay', !current);
 
         if (!current) {
-            return message.reply('🤖 Autoplay **on** — I\'ll keep the music going with related songs.');
+            return message.reply('` 🤖 Autoplay **on** `');
         } else {
-            return message.reply('🛑 Autoplay **off**.');
+            return message.reply('` 🛑 Autoplay **off** `');
         }
     }
 };
