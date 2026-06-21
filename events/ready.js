@@ -2,6 +2,7 @@ const { Events } = require('discord.js');
 const { getOrCreateLogChannel, sendGuildLog } = require('../utils/serverLogger');
 const { logGlobal, getOrCreateHomeChannel } = require('../utils/globalLogger');
 const logger = require('../utils/logger');
+const { deploySlashCommands } = require('../utils/slashDeploy');
 
 module.exports = {
     name: Events.ClientReady,
@@ -36,5 +37,8 @@ module.exports = {
         );
 
         logger.success(`[Ready] Bot started. Serving ${serverCount} guild(s).`);
+
+        // Deploy slash commands dynamically
+        await deploySlashCommands(client);
     }
 };

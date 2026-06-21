@@ -36,3 +36,5 @@ data/
 # Troubleshooting & Test Scripts
 test-*.js
 full_documentation.txt
+docs.txt
+.md

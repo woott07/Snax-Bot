@@ -49,6 +49,7 @@ module.exports = (client) => {
             const filePath = path.join(commandsPath, file);
             const command = require(filePath);
             if (command.name && typeof command.execute === 'function') {
+                command.isMusic = true;
                 client.commands.set(command.name, command);
                 count++;
             } else {
