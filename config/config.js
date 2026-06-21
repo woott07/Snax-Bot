@@ -5,6 +5,7 @@ const config = {
     ...fileConfig,
     token: process.env.Bot_Token,
     clientId: process.env.CLIENT_ID,
+    ownerId: process.env.OWNER_ID || fileConfig.ownerId || null,
     lavalink: {
         host: process.env.LAVALINK_HOST || 'lava-v4.ajieblogs.eu.org',
         port: parseInt(process.env.LAVALINK_PORT || '443', 10),

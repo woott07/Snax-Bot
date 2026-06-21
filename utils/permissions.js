@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const botConfig = require('../config/config');
 
 const dataDir = path.join(__dirname, '../data');
 const permFile = path.join(dataDir, 'permissions.json');
@@ -102,7 +103,30 @@ function getGroupForCommand(commandName) {
     return 'OwnerOnly';
 }
 
+function isBotOwner(message) {
+    if (!message || !message.author) return false;
+
+    // Check config-specified owner ID
+    if (botConfig.ownerId && botConfig.ownerId === message.author.id) {
+        return true;
+    }
+
+    // Check Discord application owner dynamically
+    const client = message.client;
+    const appOwner = client.application?.owner;
+    if (appOwner) {
+        if (appOwner.members) {
+            if (appOwner.members.has(message.author.id)) return true;
+        } else if (appOwner.id === message.author.id) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function hasPermission(message, commandName) {
+    if (isBotOwner(message)) return true;
     if (message.guild.ownerId === message.author.id) return true;
 
     // Trigger check for pending admins
@@ -134,6 +158,7 @@ function hasPermission(message, commandName) {
 
 // Specialized function to check if user has a specific group (for spam filter, etc.)
 function hasGroup(message, groupName) {
+    if (isBotOwner(message)) return true;
     if (message.guild.ownerId === message.author.id) return true;
     const config = applyPendingAdmins(message.guild.id);
     const userRoleIds = message.member.roles.cache.map(r => r.id);
