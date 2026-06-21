@@ -1,23 +1,23 @@
 const { checkVoice } = require('../../utils/voiceCheck');
+const reply = require('../../utils/reply');
 
 module.exports = {
     name: 'autoplay',
     description: 'Toggles autoplay — plays related songs when queue ends',
     async execute(message, args, client, player, config) {
         const kPlayer = player.players.get(message.guild.id);
-        if (!kPlayer || !kPlayer.playing) return message.reply('❌ Nothing is playing right now.');
+        if (!kPlayer || !kPlayer.playing) return reply.err(message, 'Nothing is playing right now.');
 
         const check = checkVoice(message, config);
-        if (!check.valid) return message.reply(check.message);
+        if (!check.valid) return reply.err(message, check.message);
 
         const current = kPlayer.data.get('autoplay') || false;
         kPlayer.data.set('autoplay', !current);
 
         if (!current) {
-            return message.reply('` 🤖 Autoplay **on** `');
+            return reply.ok(message, '🤖  Autoplay **on** — I\'ll queue related songs when the queue ends.', { ephemeral: true });
         } else {
-            return message.reply('` 🛑 Autoplay **off** `');
+            return reply.neutral(message, '🛑  Autoplay **off**.', { ephemeral: true });
         }
     }
 };
-

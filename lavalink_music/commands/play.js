@@ -1,4 +1,5 @@
 const { checkVoice } = require('../../utils/voiceCheck');
+const reply = require('../../utils/reply');
 
 module.exports = {
     name: 'play',
@@ -6,13 +7,13 @@ module.exports = {
     description: 'Play a song or playlist',
     async execute(message, args, client, player, config) {
         const check = checkVoice(message, config);
-        if (!check.valid) return message.reply(check.message);
+        if (!check.valid) return reply.err(message, check.message);
 
         const voiceChannel = check.channel;
         const rawQuery = args.join(' ');
-        if (!rawQuery) return message.reply('🎵 What would you like to play? Provide a song name or link.');
+        if (!rawQuery) return reply.err(message, 'Provide a song name or link.\n-# Example: `$play Blinding Lights`');
 
-        const loadingMsg = await message.reply('🔍 Searching...');
+        const loadingMsg = await reply.neutral(message, '🔍  Searching...');
 
         try {
             let kPlayer = player.players.get(message.guild.id);
@@ -30,27 +31,31 @@ module.exports = {
             const searchResult = await player.search(rawQuery, { requester: message.author });
 
             if (!searchResult.tracks.length) {
-                return loadingMsg.edit(`❌ Nothing found for **"${rawQuery}"**. Try a different search or paste a direct link.`);
+                return loadingMsg?.edit({
+                    embeds: [{ color: 0xED4245, description: `Nothing found for **"${rawQuery}"**.\n-# Try a different name or paste a direct link.` }]
+                });
             }
 
             if (searchResult.type === 'PLAYLIST') {
-                for (const track of searchResult.tracks) {
-                    kPlayer.queue.add(track);
-                }
-                await loadingMsg.edit(`📀 Added **${searchResult.tracks.length}** songs from **${searchResult.playlistName || 'playlist'}** to the queue.`);
+                for (const track of searchResult.tracks) kPlayer.queue.add(track);
+                loadingMsg?.edit({
+                    embeds: [{ color: 0x57F287, description: `📀  Added **${searchResult.tracks.length} songs** from **${searchResult.playlistName || 'playlist'}** to the queue.` }]
+                });
             } else {
                 const track = searchResult.tracks[0];
                 kPlayer.queue.add(track);
-                await loadingMsg.edit(`✅ Added to queue: **${track.title}**`);
+                loadingMsg?.edit({
+                    embeds: [{ color: 0x57F287, description: `✅  Added to queue\n### ${track.title}` }]
+                });
             }
 
-            if (!kPlayer.playing && !kPlayer.paused) {
-                await kPlayer.play();
-            }
+            if (!kPlayer.playing && !kPlayer.paused) await kPlayer.play();
 
         } catch (e) {
             console.error('[Play Error]', e);
-            loadingMsg.edit('⚠️ Something went wrong while trying to play that. Please try again.').catch(() => {});
+            loadingMsg?.edit({
+                embeds: [{ color: 0xED4245, description: '⚠️  Something went wrong. Please try again.' }]
+            }).catch(() => {});
         }
     }
 };

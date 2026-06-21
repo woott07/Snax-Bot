@@ -1,4 +1,5 @@
 const logger = require('../../utils/logger');
+const { logForServer, buildErrorEmbed } = require('../../utils/globalLogger');
 
 module.exports = {
     name: 'playerEmpty',
@@ -40,7 +41,7 @@ module.exports = {
 
             if (!result || !result.tracks.length) {
                 logger.warn('[Autoplay] No related songs found.');
-                if (channel) channel.send('🎵 Queue ended. No related songs found. Feel free to add more with `$play`!').catch(() => {});
+                if (channel) channel.send({ embeds: [{ color: 0xFEE75C, description: '**Queue ended**\n-# No related songs found. Add more with `$play`.' }] }).catch(() => {});
                 return;
             }
 
@@ -52,16 +53,18 @@ module.exports = {
             if (picked.title === lastTrack.title) {
                 const alternate = topTracks.find(t => t.title !== lastTrack.title);
                 if (!alternate) {
-                    if (channel) channel.send('🎵 Queue ended. Could not find a new related song.').catch(() => {});
+                    if (channel) channel.send({ embeds: [{ color: 0xFEE75C, description: '**Queue ended**\n-# Could not find a new related song.' }] }).catch(() => {});
                     return;
                 }
+                // Use the alternate track instead of the repeated one
+                picked = alternate;
             }
 
             player.queue.add(picked);
             logger.info(`[Autoplay] Queued related track: "${picked.title}"`);
 
             if (channel) {
-                channel.send(`🤖 **Up next via Autoplay:** ${picked.title}`).catch(() => {});
+                channel.send({ embeds: [{ color: 0x57F287, description: `🤖  **Up next via Autoplay**\n### ${picked.title}` }] }).catch(() => {});
             }
 
             // Start playing if not already
@@ -71,7 +74,18 @@ module.exports = {
 
         } catch (err) {
             logger.error(`[Autoplay] Error fetching related track: ${err.message}`);
-            if (channel) channel.send('⚠️ Autoplay ran into an issue. Add songs manually with `$play`.').catch(() => {});
+            if (channel) channel.send({ embeds: [{ color: 0xED4245, description: '⚠️  Autoplay ran into an issue.\n-# Add songs manually with `$play`.' }] }).catch(() => {});
+
+            // Log autoplay error to per-server home channel
+            const guild = client.guilds.cache.get(player.guildId);
+            if (guild) {
+                const errorEmbed = buildErrorEmbed({
+                    guild,
+                    context: `Autoplay — searching related song to: "${lastTrack?.title || 'Unknown'}"`,
+                    error: err.stack || err.message || err,
+                });
+                await logForServer(client, guild, { embeds: [errorEmbed] });
+            }
         }
     }
 };

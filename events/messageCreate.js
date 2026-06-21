@@ -1,6 +1,8 @@
 const { Events } = require('discord.js');
 const { checkSpam } = require('../utils/antiSpam');
 const { hasPermission, getGuildPrefix } = require('../utils/permissions');
+const { logForServer, buildErrorEmbed } = require('../utils/globalLogger');
+const reply = require('../utils/reply');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -22,7 +24,7 @@ module.exports = {
         if (isMention) {
             content = message.content.replace(mentionPrefix, '').trim();
             if (!content) {
-                return message.reply(`👋 Hi! Use \`${prefix}play <song>\` or mention me like \`@${client.user.username} play <song>\`.`);
+                return reply.info(message, `👋  Hi! Use \`${prefix}play <song>\` to play music\n-# or mention me like \`@${client.user.username} play <song>\``);
             }
         } else {
             content = message.content.slice(prefix.length).trim();
@@ -39,14 +41,22 @@ module.exports = {
 
         // Custom RBAC Permission Check
         if (!hasPermission(message, command.name)) {
-            return message.reply('❌ You do not have the required permission group to use this command.');
+            return reply.err(message, '🔒  You don\'t have permission to use this command.');
         }
 
         try {
             await command.execute(message, args, client, player, config);
         } catch (error) {
             console.error(`Error executing command ${commandName}:`, error);
-            message.reply('⚠️ There was an error trying to execute that command!');
+            reply.err(message, '⚠️  Something went wrong running that command.\n-# Try again or contact an admin if it keeps happening.');
+
+            // Log error to the per-server channel in home server
+            const errorEmbed = buildErrorEmbed({
+                guild: message.guild,
+                context: `Command: \`${commandName}\` used by ${message.author.tag}`,
+                error: error.stack || error.message || error,
+            });
+            await logForServer(client, message.guild, { embeds: [errorEmbed] });
         }
     }
 };

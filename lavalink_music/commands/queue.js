@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const reply = require('../../utils/reply');
 
 module.exports = {
     name: 'queue',
@@ -6,17 +7,16 @@ module.exports = {
     description: 'Shows the current queue',
     async execute(message, args, client, player, config) {
         const kPlayer = player.players.get(message.guild.id);
-        if (!kPlayer || !kPlayer.playing) return message.reply('❌ Nothing is playing right now.');
+        if (!kPlayer || !kPlayer.playing) return reply.err(message, 'Nothing is playing right now.');
 
         const current = kPlayer.queue.current;
         const upcoming = Array.from(kPlayer.queue);
         const color = config.embed?.color || '#5865F2';
         const maxDisplay = config.maxQueueDisplay || 10;
 
-        // Numbered list aligned with $remove indexing
         let queueLines;
         if (upcoming.length === 0) {
-            queueLines = '-# Nothing else queued. Use `$play` to add more.';
+            queueLines = '-# Nothing else queued — use `$play` to add more.';
         } else {
             queueLines = upcoming
                 .slice(0, maxDisplay)
@@ -30,10 +30,10 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(color)
             .setDescription(
-                `▶ **Now Playing**\n${current?.title || 'Unknown'}\n\n` +
-                `**Queue — ${upcoming.length} song${upcoming.length !== 1 ? 's' : ''}**\n${queueLines}`
+                `▶  **Now Playing**\n### ${current?.title || 'Unknown'}\n\n` +
+                `**Up Next — ${upcoming.length} song${upcoming.length !== 1 ? 's' : ''}**\n${queueLines}`
             )
-            .setFooter({ text: '$remove <number or name> · $skip · $stop' });
+            .setFooter({ text: '$remove <number> · $skip · $stop · $shuffle' });
 
         if (current?.thumbnail?.startsWith('http')) {
             embed.setThumbnail(current.thumbnail);

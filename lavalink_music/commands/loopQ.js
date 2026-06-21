@@ -1,4 +1,5 @@
 const { checkVoice } = require('../../utils/voiceCheck');
+const reply = require('../../utils/reply');
 
 module.exports = {
     name: 'loopQ',
@@ -6,17 +7,17 @@ module.exports = {
     description: 'Toggles loop for the entire queue',
     async execute(message, args, client, player, config) {
         const kPlayer = player.players.get(message.guild.id);
-        if (!kPlayer || !kPlayer.playing) return message.reply('❌ No music playing!');
+        if (!kPlayer || !kPlayer.playing) return reply.err(message, 'Nothing is playing right now.');
 
         const check = checkVoice(message, config);
-        if (!check.valid) return message.reply(check.message);
+        if (!check.valid) return reply.err(message, check.message);
 
         if (kPlayer.loop === 'queue') {
             kPlayer.setLoop('none');
-            return message.reply('➡️ Queue loop **disabled**.');
+            return reply.neutral(message, '➡️  Queue loop **disabled**.', { ephemeral: true });
         } else {
             kPlayer.setLoop('queue');
-            return message.reply(`🔁 Now looping the **entire queue** (${kPlayer.queue.length + 1} songs).`);
+            return reply.ok(message, `🔁  Looping the entire queue — **${kPlayer.queue.length + 1} songs**.`, { ephemeral: true });
         }
     }
 };
