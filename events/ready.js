@@ -21,7 +21,6 @@ module.exports = {
         // Initialize in-server log channels for all currently joined guilds
         for (const [id, guild] of client.guilds.cache) {
             await getOrCreateLogChannel(guild);
-            await sendGuildLog(guild, `✅ **${client.user.username}** has successfully started and is online!`);
         }
 
         // Ensure #global-log exists in home server
