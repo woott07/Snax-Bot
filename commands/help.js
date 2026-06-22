@@ -105,6 +105,8 @@ module.exports = {
                 updatedEmbed.setTitle('✏️ Nickname Commands').setDescription(`
 \`${prefix}setnick <name>\` - Change bot's nickname
 \`${prefix}setnick @user <name>\` - Change a user's nickname
+\`${prefix}remnick\` - Remove bot's nickname
+\`${prefix}remnick @user\` - Remove a user's nickname
 `);
             } else if (category === 'chat_help') {
                 if (!hasPermission(message, 'purge')) {
@@ -129,10 +131,11 @@ module.exports = {
                 }
                 updatedEmbed.setTitle('⚙️ Admin Permission Commands').setDescription(`
 *These commands assign power groups to users or roles.*
-
+ 
 **Admin Power** (Can assign any power below)
 \`${prefix}AdminExe @role/@user\` - Grant Admin power
 \`${prefix}remAdminExe @role/@user\` - Revoke Admin power
+\`${prefix}fetch @role/@user\` - Fetch permissions assigned to a role or user
 
 **Default/Music Access**
 \`${prefix}assign_default @role/@everyone\` - Grant Music access
@@ -173,12 +176,12 @@ module.exports = {
             await i.update({ embeds: [updatedEmbed], components: [row] });
         });
 
-        // Remove the dropdown after 2 minutes
+        // Disable the select menu after 2 minutes
         collector.on('end', () => {
-            const timeoutEmbed = new EmbedBuilder()
-                .setColor('#2b2d31')
-                .setDescription('⏳ Help menu has expired. Type `$help` to open it again.');
-            helpMessage.edit({ embeds: [timeoutEmbed], components: [] }).catch(() => {});
+            const disabledRow = new ActionRowBuilder().addComponents(
+                selectMenu.setDisabled(true)
+            );
+            helpMessage.edit({ components: [disabledRow] }).catch(() => {});
         });
     }
 };

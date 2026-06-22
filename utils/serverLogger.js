@@ -53,7 +53,40 @@ async function sendGuildLog(guild, messageOrEmbed) {
     }
 }
 
+async function checkAndLogRoleHierarchy(guild) {
+    if (!guild || !guild.members) return;
+
+    try {
+        const me = guild.members.me || await guild.members.fetch(guild.client.user.id).catch(() => null);
+        if (!me) return;
+
+        const hasRolePermission = me.permissions.has(PermissionFlagsBits.ManageRoles) || 
+                                 me.permissions.has(PermissionFlagsBits.Administrator);
+                                 
+        if (!hasRolePermission) return;
+
+        const botHighestRolePosition = me.roles.highest.position;
+
+        const rolesAbove = guild.roles.cache.filter(role => 
+            role.position > botHighestRolePosition && 
+            !role.managed && 
+            role.name !== '@everyone'
+        );
+
+        if (rolesAbove.size > 0) {
+            const roleNames = rolesAbove.map(r => r.name).join(', ');
+            await sendGuildLog(guild, 
+                `⚠️ **Role Hierarchy Warning**: My highest role (**${me.roles.highest.name}**) is currently below the following roles: **${roleNames}**.\n` +
+                `Please go to **Server Settings > Roles** and drag my role as high as possible so I can successfully moderate members and change nicknames.`
+            );
+        }
+    } catch (err) {
+        logger.error(`Error checking role hierarchy in ${guild.name}: ${err.message}`);
+    }
+}
+
 module.exports = {
     getOrCreateLogChannel,
-    sendGuildLog
+    sendGuildLog,
+    checkAndLogRoleHierarchy
 };

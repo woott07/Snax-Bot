@@ -9,9 +9,6 @@ module.exports = {
     async execute(message, client, player, config) {
         if (message.author.bot || !message.guild) return;
 
-        // Anti-spam check (returns true if action was taken / user timed out)
-        if (checkSpam(message)) return;
-
         // Determine prefix (Custom Guild Prefix > Default Config Prefix > '$')
         const prefix = getGuildPrefix(message.guild.id) || config.prefix || '$';
         const mentionPrefix = new RegExp(`^<@!?${client.user.id}>\\s*`);
@@ -19,6 +16,9 @@ module.exports = {
         const isPrefix = message.content.startsWith(prefix);
 
         if (!isMention && !isPrefix) return;
+
+        // Anti-spam check (returns true if action was taken / user timed out)
+        if (checkSpam(message)) return;
 
         let content;
         if (isMention) {

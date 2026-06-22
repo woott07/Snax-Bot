@@ -1,8 +1,6 @@
-# 🎵 Snax Music Bot
+# 🎵 Snax Multi-Purpose Discord Bot
 
-Welcome to **Snax**! A highly modular, dynamic, and powerful Discord music bot. Built using `discord.js` and `discord-player`, this bot is designed to be fully customizable, easy to maintain, and extremely user-friendly.
-
-> ⚠️ **Note**: Still under work, feel free to use it!
+Welcome to **Snax**! A highly modular, dynamic, and powerful Discord bot combining a full-featured music player powered by **Lavalink**, a custom Role-Based Access Control (RBAC) permission system, server moderation tools, nickname controls, and automated anti-spam protection.
 
 ---
 
@@ -13,73 +11,84 @@ Welcome to **Snax**! A highly modular, dynamic, and powerful Discord music bot. 
 
 ## ✨ Features
 
-- **Modular Architecture**: Everything is separated into neat little folders. Commands, events, and player logic are all dynamically loaded. No more massive, confusing `index.js` files!
-- **Ultra-Clean Interactive Embeds**: When you play a song, Snax sends a clean UI with the song's thumbnail and **Interactive Buttons** (`Remove`, `Push to Top`, `Keep`). These buttons auto-dismiss when a new song is added to keep your chat clean.
-- **Robust Audio Extractors**: Using the latest extraction bridges (`play-dl`, `youtube-ext`) with `highestaudio` quality enforced, ensuring crystal-clear, glitch-free audio playback.
-- **Private Automated Logging**: Automatically creates a secure `snax-log` channel in your server where only Admins and the bot can read/write logs.
-- **Queue Management**: Built-in commands to `play`, `skip`, `volume`, `remove` (by name), `queue`, and much more! (Prefix is fully customizable in config.json, defaults to `$`)
+- **Decoupled Architecture**: Commands, events, and player log pipelines are dynamically loaded. General utilities and music systems are cleanly isolated.
+- **Lavalink Music System**: Low-overhead high-quality audio streaming powered by Kazagumo/Shoukaku (Lavalink node). Includes an interactive media controller embed with play/pause, skip, loop, autoplay, and stop buttons.
+- **Custom RBAC Permission System**: Highly granular, per-guild permission database (`data/permissions.json`) supporting role/member groups (`AdminExe`, `ManagerExe`, `VoiceExe`, `setNickExe`, `ChatExe`, `Default`, `BypassExe`, `SupBypass`). Bypasses checks dynamically for server/bot owners.
+- **Proactive Role Hierarchy Warnings**: Automatically scans server roles on startup and guild join. Warns administrators in the `#snax-log` channel if the bot needs to be manually dragged higher in Server Settings to change nicknames or moderate members.
+- **Anti-Spam Filter**: Rolling-window spam protection that automatically issues warnings and 2-minute timeouts to spammers. Bypassed by moderators and custom exception groups.
+- **Private Automated Logging**: Automatically creates a secure `#snax-log` channel in your server where only Admins and the bot can read/write logs.
+- **Management & Moderation**: Built-in commands to `$ban` and `$kick` (with interactive button prompts), `$timeout` (with role hierarchy validations), `$purge` (safely capped at 100 to prevent API crashes), `$setnick` and `$remnick` (to manage nicknames), and `$fetch` (to inspect role/member permission scopes).
 
 ---
 
 ## 📁 Project Structure
 
-Here's a quick look at how the bot is organized:
+Here's a look at how the bot is organized:
 
 ```text
-Snax/
-├── config/           # Configuration files (config.json) and env wrappers
-├── commands/         # All text commands (play, skip, remove, etc.)
-├── events/           # Standard Discord client events (ready, messageCreate)
-├── playerEvents/     # Audio player events (playerStart, emptyQueue)
-├── embeds/           # UI elements and Embed builders
-├── handlers/         # Dynamic loaders that bootstrap commands and events
-├── services/         # Core business logic and audio abstractions
-├── utils/            # Helper scripts (like voiceCheck and serverLogger)
-├── install.bat       # 1-Click safe installer for Windows
-└── index.js          # The incredibly lightweight entry point!
+Snax-Bot/
+├── index.js                  — Entry point. Initializes client, handlers, and logs in.
+├── config/
+│   ├── config.json           — Runtime settings (prefix, volume, leave settings)
+│   ├── config.js             — Configuration loader merging config.json with .env
+│   └── slashOptionsMap.js    — Slash option definitions for music commands
+├── commands/                 — Non-music command files (moderation, nicknames, permissions)
+├── lavalink_music/           — Lavalink audio streaming module
+│   ├── player.js             — Kazagumo player manager and Lavalink initialization
+│   ├── interaction.js        — Embed media controller button interaction handler
+│   ├── embeds.js             — Embed builders for Queue / Now Playing UIs
+│   ├── commands/             — 13 music prefix/slash commands (play, skip, autoplay)
+│   └── events/               — Player events (playerStart, playerEmpty, error)
+├── events/                   — Client events (messageCreate, ready, interactionCreate, guildCreate, guildDelete)
+├── handlers/                 — Dynamic loaders that bootstrap client commands and events
+├── utils/                    — Core system utilities:
+│   ├── permissions.js        — Custom RBAC permissions database manager and resolver
+│   ├── antiSpam.js           — Rolling-window message frequency spam filter
+│   ├── serverLogger.js       — In-server logger and role hierarchy checks
+│   ├── globalLogger.js       — Home-server developer log manager
+│   ├── logger.js             — Colorized terminal logging utilities
+│   ├── voiceCheck.js         — VC presence and music permissions helper
+│   └── slashDeploy.js        — Dynamic registration of slash commands
+├── data/
+│   └── permissions.json      — Local guild permissions database
+├── install.bat               — 1-Click installer for Windows (installs dependencies in-folder)
+└── setup_mac.sh              — Setup script for macOS/Linux environments
 ```
 
 ---
 
-## 🚀 Getting Started (Safe Installation)
+## 🚀 Getting Started
 
-Safety is our 1st priority! The installation process restricts everything to this specific folder. It **will not** install anything globally or mess with your device's core files.
+The installation process isolates everything to this folder. It does not install anything globally.
 
 ### 1. Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed on your computer.
+Ensure you have [Node.js v18 or higher](https://nodejs.org/) installed.
 
-### 2. Quick Setup (Recommended)
-If you pulled this code from Git or downloaded it, setup is 100% automated:
-- Simply double-click the `install.bat` file.
-- It will safely download all required packages into this folder ONLY.
-- It will **automatically create** your `.env` and `.gitignore` files.
+### 2. Setup
+Run the setup script for your operating system:
+* **Windows**: Double-click `install.bat`.
+* **macOS / Linux**: Run `bash setup_mac.sh` in your terminal.
 
-### 3. Add Your Token
-Since `install.bat` created the `.env` file for you, just open it in any text editor and paste your bot token:
+This will run `npm install` and create your `.env` configuration file.
+
+### 3. Credentials Setup
+Open the generated `.env` file and insert your credentials:
 ```env
-Bot_Token=YOUR_DISCORD_BOT_TOKEN_HERE
+Bot_Token=YOUR_DISCORD_BOT_TOKEN
+OWNER_ID=YOUR_USER_ID
+LAVALINK_HOST=lava-v4.ajieblogs.eu.org
+LAVALINK_PORT=443
+LAVALINK_PASSWORD=https://dsc.gg/ajidevserver
+LAVALINK_SECURE=true
 ```
-*(Make sure you never share your token publicly!)*
 
-### 4. Configuration
-You can tweak the bot's behavior in `config/config.json`. Change the default prefix, embed colors, default volume, etc.
-
-### 5. Run the Bot
-Once setup is complete, you can start the bot using your terminal:
-
+### 4. Run the Bot
+Start the bot using:
 ```bash
 node index.js
 ```
-You should see a series of success messages in your terminal indicating that the extractors and commands have loaded, followed by `🤖 Success! Logged in as YourBotName`.
-
----
-
-## 🛠️ Adding New Commands
-
-Want to add a new feature? It's incredibly easy! 
-Just create a new file in the `commands/` folder. Snax will automatically detect it and load it the next time it starts.
 
 ---
 
 ## 📝 License
-Feel free to use, modify, and distribute this codebase for your own Discord servers! Enjoy the music! 🎧
+Feel free to use, modify, and distribute this codebase for your own Discord servers! Enjoy the music and utility features! 🎧

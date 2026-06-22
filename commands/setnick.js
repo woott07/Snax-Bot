@@ -10,8 +10,13 @@ module.exports = {
             args.shift();
             newNickname = args.join(' ');
 
+            // Check if target is guild owner
+            if (target.id === message.guild.ownerId) {
+                return message.reply(`❌ I cannot change the nickname of the server owner!`);
+            }
+
             // Check if bot can change this user's nickname (role hierarchy)
-            if (target.roles.highest.position >= message.guild.members.me.roles.highest.position) {
+            if (target.id !== message.guild.members.me.id && target.roles.highest.position >= message.guild.members.me.roles.highest.position) {
                 return message.reply(`❌ I cannot change the nickname of **${target.user.username}** because their role is higher than or equal to mine!`);
             }
         } else {

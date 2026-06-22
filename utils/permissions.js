@@ -16,10 +16,10 @@ if (!fs.existsSync(permFile)) {
 
 // Group definitions
 const COMMAND_GROUPS = {
-    'AdminExe': ['VoiceExe', 'remVoiceExe', 'setNickExe', 'remNickExe', 'assign_default', 'default_remove', 'AdminExe', 'remAdminExe', 'ChatExe', 'remChatExe', 'ManagerExe', 'remManagerExe', 'BypassExe', 'remBypassExe', 'SupBypass', 'remSupBypass', 'setprefix', 'remprefix'],
+    'AdminExe': ['VoiceExe', 'remVoiceExe', 'setNickExe', 'remNickExe', 'assign_default', 'default_remove', 'AdminExe', 'remAdminExe', 'ChatExe', 'remChatExe', 'ManagerExe', 'remManagerExe', 'BypassExe', 'remBypassExe', 'SupBypass', 'remSupBypass', 'setprefix', 'remprefix', 'fetch'],
     'ManagerExe': ['ban', 'unban', 'kick'],
     'VoiceExe': ['mute', 'unmute', 'deafen', 'undeafen', 'dragreq', 'addme'],
-    'setNickExe': ['setnick'],
+    'setNickExe': ['setnick', 'remnick'],
     'ChatExe': ['purge', 'timeout'],
     'Default': [
         'play', 'skip', 'queue', 'ping', 'help', 'hello', 'nowplaying', 
@@ -248,6 +248,56 @@ function setGuildPrefix(guildId, newPrefix) {
     saveGuildConfig(guildId, config);
 }
 
+async function resolveTarget(message, arg) {
+    if (!arg) return null;
+    
+    // Check for literal '@everyone'
+    if (arg === '@everyone') {
+        return { id: '@everyone', displayName: '@everyone', isEveryone: true };
+    }
+
+    const targetId = arg.replace(/[^0-9]/g, '');
+    if (!targetId) return null;
+
+    // Check if it's a role
+    const role = message.guild.roles.cache.get(targetId);
+    if (role) {
+        return { id: targetId, displayName: role.name, role: role, isRole: true };
+    }
+
+    // Check if it's a member/user
+    try {
+        const member = message.guild.members.cache.get(targetId) || await message.guild.members.fetch(targetId);
+        if (member) {
+            return { id: targetId, displayName: member.user.username, member: member, isUser: true };
+        }
+    } catch (e) {
+        // Not a member or fetch failed
+    }
+
+    return null;
+}
+
+function getTargetPermissions(guildId, targetId) {
+    const config = applyPendingAdmins(guildId);
+    const groups = [];
+
+    const groupKeys = ['Default', 'VoiceExe', 'setNickExe', 'AdminExe', 'ChatExe', 'ManagerExe', 'BypassExe', 'SupBypass'];
+    for (const key of groupKeys) {
+        if (config[key] && config[key].includes(targetId)) {
+            groups.push(key);
+        }
+    }
+
+    if (config.pendingAdminExe && config.pendingAdminExe[targetId]) {
+        const remainingMs = config.pendingAdminExe[targetId] - Date.now();
+        const remainingMin = Math.ceil(remainingMs / 60000);
+        groups.push(`pendingAdminExe (${remainingMin}m remaining)`);
+    }
+
+    return groups;
+}
+
 module.exports = {
     hasPermission,
     hasGroup,
@@ -255,5 +305,7 @@ module.exports = {
     removeTarget,
     checkManagerHierarchy,
     getGuildPrefix,
-    setGuildPrefix
+    setGuildPrefix,
+    resolveTarget,
+    getTargetPermissions
 };

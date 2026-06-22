@@ -10,7 +10,7 @@ module.exports = {
 
         try {
             // Delete the command message + the requested amount
-            const fetched = await message.channel.messages.fetch({ limit: amount + 1 });
+            const fetched = await message.channel.messages.fetch({ limit: Math.min(amount + 1, 100) });
             await message.channel.bulkDelete(fetched, true);
 
             const confirmation = await message.channel.send(`✅ Successfully deleted **${amount}** messages.`);

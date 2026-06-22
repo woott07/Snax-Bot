@@ -1,5 +1,5 @@
 const { Events, AuditLogEvent } = require('discord.js');
-const { getOrCreateLogChannel, sendGuildLog } = require('../utils/serverLogger');
+const { getOrCreateLogChannel, sendGuildLog, checkAndLogRoleHierarchy } = require('../utils/serverLogger');
 const { logGlobal, logForServer, buildGuildEmbed } = require('../utils/globalLogger');
 const logger = require('../utils/logger');
 
@@ -15,6 +15,7 @@ module.exports = {
             `I've created this private channel to log important bot activities and errors.\n` +
             `My prefix is \`$\` — for more info type \`$help\``
         );
+        await checkAndLogRoleHierarchy(guild);
 
         // 2. Try to find who added the bot via audit log
         let inviter = null;

@@ -1,3 +1,5 @@
+const { checkManagerHierarchy } = require('../utils/permissions');
+
 module.exports = {
     name: 'timeout',
     description: 'Time out a user for a specific duration in minutes',
@@ -5,6 +7,14 @@ module.exports = {
         const target = message.mentions.members.first();
         if (!target) {
             return message.reply('❌ Please mention a user to timeout. Example: `$timeout @user 10`');
+        }
+
+        if (target.id === message.author.id) {
+            return message.reply('❌ You cannot timeout yourself!');
+        }
+
+        if (!checkManagerHierarchy(message, target)) {
+            return message.reply('❌ You cannot timeout someone with a role equal to or higher than yours!');
         }
 
         const durationInMinutes = parseInt(args[1]);

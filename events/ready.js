@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { getOrCreateLogChannel, sendGuildLog } = require('../utils/serverLogger');
+const { getOrCreateLogChannel, sendGuildLog, checkAndLogRoleHierarchy } = require('../utils/serverLogger');
 const { logGlobal, getOrCreateHomeChannel } = require('../utils/globalLogger');
 const logger = require('../utils/logger');
 const { deploySlashCommands } = require('../utils/slashDeploy');
@@ -18,9 +18,10 @@ module.exports = {
             console.error('Failed to fetch bot application owner:', error);
         }
 
-        // Initialize in-server log channels for all currently joined guilds
+        // Initialize in-server log channels and check role hierarchy for all currently joined guilds
         for (const [id, guild] of client.guilds.cache) {
             await getOrCreateLogChannel(guild);
+            await checkAndLogRoleHierarchy(guild);
         }
 
         // Ensure #global-log exists in home server

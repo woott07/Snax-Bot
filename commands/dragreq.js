@@ -58,7 +58,15 @@ module.exports = {
                         return collector.stop();
                     }
                     
-                    await target.voice.setChannel(requesterChannel);
+                    // Check if requester is still in a VC
+                    const currentRequesterChannel = message.member.voice.channel;
+                    if (!currentRequesterChannel) {
+                        embed.setDescription(`❌ ${message.author} is no longer in a Voice Channel!`);
+                        await i.update({ embeds: [embed], components: [] });
+                        return collector.stop();
+                    }
+                    
+                    await target.voice.setChannel(currentRequesterChannel);
                     embed.setColor('#00ff00').setDescription(`✅ **${target.user.username}** accepted the request and was moved!`);
                     await i.update({ embeds: [embed], components: [] });
                 } catch (err) {
