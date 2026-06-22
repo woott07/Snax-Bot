@@ -35,7 +35,7 @@ module.exports = {
 
         // Find the command by name or aliases
         const command = client.commands.get(commandName) || 
-                        client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+                        client.commands.find(cmd => cmd.aliases && cmd.aliases.some(alias => alias.toLowerCase() === commandName));
 
         if (!command) return;
 

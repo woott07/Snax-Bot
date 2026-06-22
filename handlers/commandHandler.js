@@ -11,7 +11,7 @@ module.exports = (client) => {
         const filePath = path.join(commandsPath, file);
         const command = require(filePath);
         if (command.name && typeof command.execute === 'function') {
-            client.commands.set(command.name, command);
+            client.commands.set(command.name.toLowerCase(), command);
             count++;
         } else {
             logger.warn(`The command at ${filePath} is missing a required "name" or "execute" property.`);

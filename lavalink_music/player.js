@@ -50,7 +50,7 @@ module.exports = (client) => {
             const command = require(filePath);
             if (command.name && typeof command.execute === 'function') {
                 command.isMusic = true;
-                client.commands.set(command.name, command);
+                client.commands.set(command.name.toLowerCase(), command);
                 count++;
             } else {
                 logger.warn(`The Lavalink command at ${filePath} is missing a required "name" or "execute" property.`);
