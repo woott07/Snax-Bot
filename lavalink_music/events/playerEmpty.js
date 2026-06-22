@@ -6,7 +6,15 @@ module.exports = {
     async execute(player, client, kazagumo, config) {
         // Check if autoplay is enabled for this player
         const autoplayEnabled = player.data.get('autoplay') || false;
-        if (!autoplayEnabled) return;
+        if (!autoplayEnabled) {
+            //clear the voice channel status
+            if (player.voiceId){
+                client.rest.put(`/channels/${player.voiceId}/voice-status`,{
+                    body:{ status:""}
+                }).catch(()=>{});
+            }
+            return;
+        }
 
         const lastTrack = player.data.get('lastTrack');
         if (!lastTrack) return;

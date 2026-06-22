@@ -1,0 +1,5 @@
+{
+    "name": "Playing",
+    "type": "Listening",
+    "_comment": "Valid types are: Playing, Streaming, Listening, Watching, Custom, or Competing"
+}

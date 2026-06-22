@@ -32,5 +32,9 @@ module.exports = {
         if (guild && channelId) {
             await sendGuildLog(guild, `▶️ Started playing: **${track.title}** in <#${channelId}>`).catch(() => {});
         }
-    }
+        // set custom status of the bot as the song playing
+        if (player.voiceId) {client.rest.put(`/channels/${player.voiceId}/voice-status`,
+            {body:{status:`🎶 Playing: ${track.title}`.substring(0, 500)
+        }}).catch((err)=>{logger.error(`Failed to set voice status: ${err.message}`);})}
+}
 };

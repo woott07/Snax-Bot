@@ -1,9 +1,9 @@
-const { Events } = require('discord.js');
+const { Events, ActivityType } = require('discord.js');
 const { getOrCreateLogChannel, sendGuildLog, checkAndLogRoleHierarchy } = require('../utils/serverLogger');
 const { logGlobal, getOrCreateHomeChannel } = require('../utils/globalLogger');
 const logger = require('../utils/logger');
 const { deploySlashCommands } = require('../utils/slashDeploy');
-
+const activity = require('../config/activity.json');
 module.exports = {
     name: Events.ClientReady,
     once: true,
@@ -40,5 +40,7 @@ module.exports = {
 
         // Deploy slash commands dynamically
         await deploySlashCommands(client);
+        client.user.setActivity(activity.name, { type: ActivityType[activity.type] });
+        console.log(`Activity set to ${activity.name} and type ${activity.type}`);
     }
 };
