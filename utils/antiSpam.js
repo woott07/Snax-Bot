@@ -1,4 +1,4 @@
-const { hasGroup } = require('./permissions');
+const config = require('../config/config');
 
 // In-memory store for message timestamps
 const userMessages = new Map();
@@ -6,13 +6,13 @@ const userMessages = new Map();
 function checkSpam(message) {
     if (message.author.bot || !message.guild) return false;
 
-    // Check if user is immune
-    if (
-        message.guild.ownerId === message.author.id ||
-        hasGroup(message, 'SupBypass') || 
-        hasGroup(message, 'AdminExe') || 
-        hasGroup(message, 'ManagerExe')
-    ) {
+    const isBotOwner = config.ownerId === message.author.id;
+    const isGuildOwner = message.guild.ownerId === message.author.id;
+    const isAdmin = message.member?.permissions.has('Administrator');
+    const isManager = message.member?.permissions.has('ManageGuild') || message.member?.permissions.has('ManageMessages');
+
+    // Check if user is immune (owner, administrator, or managers)
+    if (isBotOwner || isGuildOwner || isAdmin || isManager) {
         return false;
     }
 
@@ -33,10 +33,10 @@ function checkSpam(message) {
     }
 
     const msgCount = timestamps.length;
-    const isBypassExe = hasGroup(message, 'BypassExe');
     
-    const warnLimit = isBypassExe ? 15 : 4;
-    const timeoutLimit = isBypassExe ? 20 : 7;
+    // Limits: warning at 4 messages, timeout at 7 messages.
+    const warnLimit = 4;
+    const timeoutLimit = 7;
 
     if (msgCount === warnLimit) {
         message.channel.send(`⚠️ **${message.author.username}**, please stop spamming! You are sending messages too fast.`)
@@ -45,7 +45,7 @@ function checkSpam(message) {
         message.channel.send(`🛑 **${message.author.username}** has been timed out for 2 minutes due to spamming.`);
         
         // Timeout for 2 minutes (120000 ms)
-        if (message.member.moderatable) {
+        if (message.member && message.member.moderatable) {
             message.member.timeout(120000, 'Spamming (Automated filter)')
                 .catch(err => console.error('Failed to timeout spammer:', err));
         }

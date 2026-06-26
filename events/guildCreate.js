@@ -1,5 +1,4 @@
-const { Events, AuditLogEvent } = require('discord.js');
-const { getOrCreateLogChannel, sendGuildLog, checkAndLogRoleHierarchy } = require('../utils/serverLogger');
+const { Events, AuditLogEvent, ChannelType, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { logGlobal, logForServer, buildGuildEmbed } = require('../utils/globalLogger');
 const logger = require('../utils/logger');
 
@@ -8,14 +7,29 @@ module.exports = {
     async execute(guild, client, player, config) {
         logger.info(`[GuildCreate] Bot joined: ${guild.name} (${guild.id})`);
 
-        // 1. Create the in-server snax-log channel (existing behaviour)
-        await getOrCreateLogChannel(guild);
-        await sendGuildLog(guild,
-            `👋 Hello! Thanks for adding **${client.user.username}** to your server.\n` +
-            `I've created this private channel to log important bot activities and errors.\n` +
-            `My prefix is \`$\` — for more info type \`$help\``
-        );
-        await checkAndLogRoleHierarchy(guild);
+        // 1. Send greeting message to system channel or first writeable channel
+        const pinkColor = config.embedColor || config.embed?.color || '#FF8DA1';
+        const welcomeEmbed = new EmbedBuilder()
+            .setColor(pinkColor)
+            .setTitle(`👋 Thanks for adding ${client.user.username}!`)
+            .setDescription(
+                `To set up the music log channel, please have the **Server Owner**, **Bot Owner**, or an **Administrator** run the command:\n` +
+                `\`$setup\`\n\n` +
+                `This will open an interactive menu to select the log channel where the bot will log what is playing and other bot events.`
+            )
+            .setFooter({ text: 'Snax Music Bot Setup' })
+            .setTimestamp();
+
+        let welcomeChannel = guild.systemChannel;
+        if (!welcomeChannel || !welcomeChannel.permissionsFor(client.user).has(PermissionFlagsBits.SendMessages)) {
+            welcomeChannel = guild.channels.cache.find(
+                c => c.type === ChannelType.GuildText && c.permissionsFor(client.user).has(PermissionFlagsBits.SendMessages)
+            );
+        }
+
+        if (welcomeChannel) {
+            await welcomeChannel.send({ embeds: [welcomeEmbed] }).catch(() => {});
+        }
 
         // 2. Try to find who added the bot via audit log
         let inviter = null;

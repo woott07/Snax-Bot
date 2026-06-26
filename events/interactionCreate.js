@@ -1,6 +1,5 @@
 const { Events, Collection, ApplicationCommandOptionType } = require('discord.js');
 const handleMusicInteraction = require('../lavalink_music/interaction');
-const { hasPermission } = require('../utils/permissions');
 const { logForServer, buildErrorEmbed } = require('../utils/globalLogger');
 const { checkSpam } = require('../utils/antiSpam');
 const reply = require('../utils/reply');
@@ -45,7 +44,17 @@ module.exports = {
                     roles: new Collection(),
                 },
                 reply: async (content) => {
-                    const payload = typeof content === 'string' ? { content } : content;
+                    let payload;
+                    if (typeof content === 'string') {
+                        payload = {
+                            embeds: [{
+                                description: content,
+                                color: 0xFF8DA1
+                            }]
+                        };
+                    } else {
+                        payload = content;
+                    }
                     
                     if (interaction.replied) {
                         return await interaction.followUp({ ...payload, fetchReply: true });
@@ -59,11 +68,6 @@ module.exports = {
 
             // Run anti-spam checks
             if (checkSpam(mockMessage)) return;
-
-            // Run custom RBAC permission checks
-            if (!hasPermission(mockMessage, command.name)) {
-                return reply.err(mockMessage, "🔒  You don't have permission to use this command.");
-            }
 
             // Parse slash options to populate `args` and `mentions`
             let args = [];
@@ -101,6 +105,9 @@ module.exports = {
                                 mockMessage.mentions.users.set(mentionable.id, mentionable);
                             }
                         }
+                    } else if (opt.type === ApplicationCommandOptionType.Channel) {
+                        const channel = interaction.options.getChannel(opt.name);
+                        if (channel) val = `<#${channel.id}>`;
                     } else if (opt.type === ApplicationCommandOptionType.Integer) {
                         const intVal = interaction.options.getInteger(opt.name);
                         if (intVal !== null && intVal !== undefined) val = String(intVal);

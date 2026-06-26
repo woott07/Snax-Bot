@@ -2,11 +2,11 @@ const { EmbedBuilder } = require('discord.js');
 
 // Palette
 const COLORS = {
-    success : 0x57F287,  // green
-    error   : 0xED4245,  // red
-    info    : 0x5865F2,  // blurple
-    warn    : 0xFEE75C,  // yellow
-    neutral : 0x2B2D31,  // dark grey
+    success : 0xFF8DA1,  // pink
+    error   : 0xFF8DA1,  // pink
+    info    : 0xFF8DA1,  // pink
+    warn    : 0xFFFFFF,  // white
+    neutral : 0xFFFFFF,  // white
 };
 
 /**

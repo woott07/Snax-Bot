@@ -1,6 +1,5 @@
 const { Events } = require('discord.js');
 const { checkSpam } = require('../utils/antiSpam');
-const { hasPermission, getGuildPrefix } = require('../utils/permissions');
 const { logForServer, buildErrorEmbed } = require('../utils/globalLogger');
 const reply = require('../utils/reply');
 
@@ -9,8 +8,8 @@ module.exports = {
     async execute(message, client, player, config) {
         if (message.author.bot || !message.guild) return;
 
-        // Determine prefix (Custom Guild Prefix > Default Config Prefix > '$')
-        const prefix = getGuildPrefix(message.guild.id) || config.prefix || '$';
+        // Determine prefix (Default Config Prefix > '$')
+        const prefix = config.prefix || '$';
         const mentionPrefix = new RegExp(`^<@!?${client.user.id}>\\s*`);
         const isMention = mentionPrefix.test(message.content);
         const isPrefix = message.content.startsWith(prefix);
@@ -39,12 +38,23 @@ module.exports = {
 
         if (!command) return;
 
-        // Custom RBAC Permission Check
-        if (!hasPermission(message, command.name)) {
-            return reply.err(message, '🔒  You don\'t have permission to use this command.');
-        }
-
         try {
+            const originalReply = message.reply;
+            message.reply = async function(content) {
+                let payload;
+                if (typeof content === 'string') {
+                    payload = {
+                        embeds: [{
+                            description: content,
+                            color: 0xFF8DA1
+                        }]
+                    };
+                } else {
+                    payload = content;
+                }
+                return originalReply.call(message, payload);
+            };
+
             await command.execute(message, args, client, player, config);
         } catch (error) {
             console.error(`Error executing command ${commandName}:`, error);

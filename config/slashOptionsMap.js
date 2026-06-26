@@ -30,5 +30,35 @@ module.exports = {
                 required: false
             }
         ]
+    },
+    hsethome: {
+        options: [
+            {
+                name: 'channel',
+                description: 'The text channel in the home server to set as log (optional)',
+                type: ApplicationCommandOptionType.Channel,
+                required: false
+            }
+        ]
+    },
+    setup: {
+        options: [
+            {
+                name: 'channel',
+                description: 'The text channel to set as log (optional)',
+                type: ApplicationCommandOptionType.Channel,
+                required: false
+            }
+        ]
+    },
+    setups: {
+        options: [
+            {
+                name: 'channel',
+                description: 'The text channel to set as log (optional)',
+                type: ApplicationCommandOptionType.Channel,
+                required: false
+            }
+        ]
     }
 };

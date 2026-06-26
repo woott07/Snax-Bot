@@ -11,5 +11,11 @@ module.exports = {
                 body: { status: "" }
             }).catch(() => {});
         }
+
+        // Delete active controller embeds
+        const oldCmdMsg = player.data.get('controllerMsg');
+        if (oldCmdMsg) oldCmdMsg.delete().catch(() => {});
+        const oldLogMsg = player.data.get('logControllerMsg');
+        if (oldLogMsg) oldLogMsg.delete().catch(() => {});
     }
 };

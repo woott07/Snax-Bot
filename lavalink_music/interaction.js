@@ -1,5 +1,37 @@
 const { createQueueEmbed, createActionRow } = require('./embeds');
 
+async function updateBothControllers(kPlayer, client, config, isExpanded = null) {
+    if (isExpanded === null) {
+        isExpanded = kPlayer.data.get('isExpanded') || false;
+    } else {
+        kPlayer.data.set('isExpanded', isExpanded);
+    }
+
+    const embed = createQueueEmbed(kPlayer, config, isExpanded);
+    const row = createActionRow(isExpanded);
+
+    if (!embed) return;
+
+    const cmdMsg = kPlayer.data.get('controllerMsg');
+    const logMsg = kPlayer.data.get('logControllerMsg');
+
+    const updatePromises = [];
+
+    if (cmdMsg) {
+        updatePromises.push(
+            cmdMsg.edit({ embeds: [embed], components: [row] }).catch(() => null)
+        );
+    }
+
+    if (logMsg) {
+        updatePromises.push(
+            logMsg.edit({ embeds: [embed], components: [row] }).catch(() => null)
+        );
+    }
+
+    await Promise.all(updatePromises);
+}
+
 module.exports = async (interaction, client, player, config) => {
     const kPlayer = player.players.get(interaction.guildId);
     if (!kPlayer) {
@@ -10,22 +42,11 @@ module.exports = async (interaction, client, player, config) => {
 
     try {
         switch (interaction.customId) {
-            case 'music_back':
-                await interaction.reply({ content: '⏮️ Track history isn\'t available.', flags: 64 });
-                break;
-
             case 'music_pause': {
-                const isCurrentlyExpanded = interaction.message.components[0]?.components[4]?.customId === 'music_collapse';
+                const isCurrentlyExpanded = kPlayer.data.get('isExpanded') || false;
+                await interaction.deferUpdate();
                 await kPlayer.pause(!kPlayer.paused);
-                const embed = createQueueEmbed(kPlayer, config, isCurrentlyExpanded);
-                if (embed) {
-                    await interaction.update({
-                        embeds: [embed],
-                        components: [createActionRow(isCurrentlyExpanded)]
-                    });
-                } else {
-                    await interaction.deferUpdate();
-                }
+                await updateBothControllers(kPlayer, client, config, isCurrentlyExpanded);
                 break;
             }
 
@@ -34,34 +55,25 @@ module.exports = async (interaction, client, player, config) => {
                 await kPlayer.skip();
                 break;
 
-            case 'music_stop':
+            case 'music_stop': {
+                await interaction.deferUpdate();
+                const oldCmdMsg = kPlayer.data.get('controllerMsg');
+                if (oldCmdMsg) await oldCmdMsg.delete().catch(() => {});
+                const oldLogMsg = kPlayer.data.get('logControllerMsg');
+                if (oldLogMsg) await oldLogMsg.delete().catch(() => {});
                 kPlayer.destroy();
-                await interaction.update({ content: '⏹️ Stopped.', embeds: [], components: [] });
                 break;
+            }
 
             case 'music_expand': {
-                const embedExp = createQueueEmbed(kPlayer, config, true);
-                if (embedExp) {
-                    await interaction.update({
-                        embeds: [embedExp],
-                        components: [createActionRow(true)]
-                    });
-                } else {
-                    await interaction.deferUpdate();
-                }
+                await interaction.deferUpdate();
+                await updateBothControllers(kPlayer, client, config, true);
                 break;
             }
 
             case 'music_collapse': {
-                const embedCol = createQueueEmbed(kPlayer, config, false);
-                if (embedCol) {
-                    await interaction.update({
-                        embeds: [embedCol],
-                        components: [createActionRow(false)]
-                    });
-                } else {
-                    await interaction.deferUpdate();
-                }
+                await interaction.deferUpdate();
+                await updateBothControllers(kPlayer, client, config, false);
                 break;
             }
         }

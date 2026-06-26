@@ -1,5 +1,6 @@
 const { ChannelType, EmbedBuilder } = require('discord.js');
 const logger = require('./logger');
+const { getGlobalSetting } = require('./settingsManager');
 
 // Cache: guildId -> Discord channel object (so we don't refetch every time)
 const channelCache = new Map();
@@ -8,9 +9,9 @@ const channelCache = new Map();
  * Get the home server (the bot's own management guild).
  */
 function getHomeGuild(client) {
-    const homeId = process.env.HOME_SERVER_ID;
+    const homeId = getGlobalSetting('homeServerId') || process.env.HOME_SERVER_ID;
     if (!homeId) {
-        logger.warn('[GlobalLogger] HOME_SERVER_ID is not set in .env — global logging disabled.');
+        logger.warn('[GlobalLogger] Home server ID is not set — global logging disabled.');
         return null;
     }
     const guild = client.guilds.cache.get(homeId);
@@ -31,29 +32,48 @@ async function getOrCreateHomeChannel(client, channelName) {
     const homeGuild = getHomeGuild(client);
     if (!homeGuild) return null;
 
-    // Sanitize: Discord channel names must be lowercase, no spaces, max 100 chars
-    const safeName = channelName
-        .toLowerCase()
-        .replace(/[^a-z0-9\-_]/g, '-')   // replace invalid chars with dash
-        .replace(/-{2,}/g, '-')            // collapse multiple dashes
-        .replace(/^-|-$/g, '')             // trim leading/trailing dashes
-        .substring(0, 100);
+    let channel = null;
 
-    let channel = homeGuild.channels.cache.find(
-        c => c.name === safeName && c.type === ChannelType.GuildText
-    );
+    // If requesting global-log, check custom configured channel first
+    if (channelName === 'global-log') {
+        const customChannelId = getGlobalSetting('homeLogChannelId');
+        if (customChannelId) {
+            channel = homeGuild.channels.cache.get(customChannelId);
+            if (!channel) {
+                try {
+                    channel = await homeGuild.channels.fetch(customChannelId).catch(() => null);
+                } catch (e) {
+                    // Ignore
+                }
+            }
+        }
+    }
 
+    // Fallback to name search or creation
     if (!channel) {
-        try {
-            channel = await homeGuild.channels.create({
-                name: safeName,
-                type: ChannelType.GuildText,
-                topic: `Global log channel — managed by ${homeGuild.client.user.username}`,
-            });
-            logger.success(`[GlobalLogger] Created channel #${safeName} in home server.`);
-        } catch (err) {
-            logger.error(`[GlobalLogger] Could not create channel #${safeName}: ${err.message}`);
-            return null;
+        const safeName = channelName
+            .toLowerCase()
+            .replace(/[^a-z0-9\-_]/g, '-')   // replace invalid chars with dash
+            .replace(/-{2,}/g, '-')            // collapse multiple dashes
+            .replace(/^-|-$/g, '')             // trim leading/trailing dashes
+            .substring(0, 100);
+
+        channel = homeGuild.channels.cache.find(
+            c => c.name === safeName && c.type === ChannelType.GuildText
+        );
+
+        if (!channel) {
+            try {
+                channel = await homeGuild.channels.create({
+                    name: safeName,
+                    type: ChannelType.GuildText,
+                    topic: `Global log channel — managed by ${homeGuild.client.user.username}`,
+                });
+                logger.success(`[GlobalLogger] Created channel #${safeName} in home server.`);
+            } catch (err) {
+                logger.warn(`[GlobalLogger] Could not create channel #${safeName}: ${err.message}`);
+                return null;
+            }
         }
     }
 

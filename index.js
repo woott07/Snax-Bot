@@ -1,19 +1,35 @@
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const config = require('./config/config');
 const logger = require('./utils/logger');
-const commandHandler = require('./handlers/commandHandler');
 const eventHandler = require('./handlers/eventHandler');
 
+const { logGlobal } = require('./utils/globalLogger');
+
+let client;
+
 // ─── Global Crash Protection ──────────────────────────────────────────────────
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', async (error) => {
     logger.error(`[UNCAUGHT EXCEPTION] ${error.stack || error}`);
+    if (client && client.isReady()) {
+        try {
+            await logGlobal(client, `🚨 **[UNCAUGHT EXCEPTION]**\n\`\`\`js\n${(error.stack || error).substring(0, 1800)}\n\`\`\``);
+        } catch (e) {
+            console.error('Failed to log uncaught exception globally:', e);
+        }
+    }
 });
-process.on('unhandledRejection', (reason) => {
+process.on('unhandledRejection', async (reason) => {
     logger.error(`[UNHANDLED REJECTION] ${reason.stack || reason}`);
+    if (client && client.isReady()) {
+        try {
+            await logGlobal(client, `🚨 **[UNHANDLED REJECTION]**\n\`\`\`js\n${(reason.stack || reason || '').substring(0, 1800)}\n\`\`\``);
+        } catch (e) {
+            console.error('Failed to log unhandled rejection globally:', e);
+        }
+    }
 });
 
 // ─── Shutdown Handlers ────────────────────────────────────────────────────────
-const { logGlobal } = require('./utils/globalLogger');
 
 process.on('SIGINT', async () => {
     logger.warn('Received SIGINT. Logging offline status...');
@@ -40,7 +56,7 @@ process.on('SIGTERM', async () => {
 });
 
 // Initialize Client with necessary Intents
-const client = new Client({
+client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -56,7 +72,6 @@ client.commands = new Collection();
 const player = require('./lavalink_music/player')(client);
 
 // Load Handlers
-commandHandler(client);
 eventHandler(client, player);
 
 // Log in the bot using token
